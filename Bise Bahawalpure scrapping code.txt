@@ -1,0 +1,52 @@
+<?php
+require 'simple_html_dom.php';
+$servername = "localhost";
+$username = "root";
+$password = "";
+$database = "assignment";
+
+// Create connection
+$conn = mysqli_connect($servername, $username, $password,$database);
+
+// Check connection
+if (!$conn) {
+  die("Connection failed: " . mysqli_connect_error());
+}
+echo "Connected successfully";
+if (($h = fopen("csvs/sciencegroup/table9.csv", "r")) !== FALSE) {
+	$i=0;
+	while (($data = fgetcsv($h, 1000, ",")) !== FALSE) 
+	{
+
+		// echo $i;
+		$i++;
+		// if($i > 48){
+			
+		foreach($data as $d){
+			$html = file_get_html('https://biseh.result.pk/result/?isclicked=yahoo&roll_number='.$d.'&gezette_year=2022&board_slash_class=12th/biseh');
+			$results = array();
+			foreach($html->find('table.table_c') as $result) {
+			    $item['roll_number'] = $result->find('tr', 0)->find('td', 1)->plaintext;
+			    $item['Board/University']    = $result->find('tr', 1)->find('td', 1)->plaintext;
+			    $item['Class'] = $result->find('tr', 2)->find('td', 1)->plaintext;
+			    $item['Group'] = $result->find('tr', 3)->find('td', 1)->plaintext;
+			    $item['Grade'] = $result->find('tr', 4)->find('td', 1)->plaintext;
+			    $item['City'] = $result->find('tr', 5)->find('td', 1)->plaintext;
+			    $item['Exam'] = $result->find('tr', 6)->find('td', 1)->plaintext;
+			    $item['Result'] = $result->find('tr',7)->find('td', 1)->plaintext;
+			    $results[] = $item;
+			    $sql = "INSERT INTO scrappingdata (roll_number, board_university,class,groupC,grade,city,exam,result)
+				VALUES ('".implode("','",$item)."')";
+				if (mysqli_query($conn, $sql)) {
+				  echo "New record created successfully";
+				} else {
+				  echo "Error: " . $sql . "<br>" . mysqli_error($conn);
+				}
+			}
+			print_r($results);
+		}
+	// }
+	}	
+
+}
+?>
